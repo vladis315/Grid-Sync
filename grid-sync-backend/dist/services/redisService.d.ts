@@ -41,22 +41,6 @@ export declare const setCellData: (tenantId: string, documentId: string, rowId: 
  */
 export declare const getCellData: (tenantId: string, documentId: string, rowId: string, columnId: string) => Promise<any>;
 /**
- * Add a row to the document's row list
- */
-export declare const addRow: (tenantId: string, documentId: string, rowId: string, referenceRowId?: string) => Promise<string[]>;
-/**
- * Delete a row from the document's row list and all its cells
- */
-export declare const deleteRow: (tenantId: string, documentId: string, rowId: string) => Promise<string[]>;
-/**
- * Add a column to the document's column list
- */
-export declare const addColumn: (tenantId: string, documentId: string, columnId: string, referenceColumnId?: string) => Promise<string[]>;
-/**
- * Delete a column from the document's column list and all its cells
- */
-export declare const deleteColumn: (tenantId: string, documentId: string, columnId: string) => Promise<string[]>;
-/**
  * Get the order of rows for a document
  */
 export declare const getRowOrder: (tenantId: string, documentId: string) => Promise<string[]>;

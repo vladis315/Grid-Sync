@@ -5,10 +5,6 @@ import {
   DocumentState, 
   MessageType, 
   WebSocketMessage,
-  RowAddResponseMessage,
-  RowDeleteResponseMessage,
-  ColumnAddResponseMessage,
-  ColumnDeleteResponseMessage,
   CellUpdateResponseMessage
 } from '../types';
 
@@ -84,33 +80,6 @@ export const useGridSync = (config: GridSyncConfig) => {
       } else if (message.type === MessageType.ERROR) {
         setError(message.message);
         console.error('[DEBUG] ERROR message from server:', message.message);
-      } else if (message.type === MessageType.COLUMN_ADD_RESPONSE) {
-        // Check for duplicate columns in indexOrder
-        const columnAddMsg = message as ColumnAddResponseMessage;
-        const uniqueColumns = [...new Set(columnAddMsg.indexOrder)];
-        if (uniqueColumns.length !== columnAddMsg.indexOrder.length) {
-          console.warn('[DEBUG] Duplicate columns detected in COLUMN_ADD_RESPONSE:', {
-            indexOrder: columnAddMsg.indexOrder,
-            uniqueIndexOrder: uniqueColumns,
-            duplicates: columnAddMsg.indexOrder.filter((col, index) => 
-              columnAddMsg.indexOrder.indexOf(col) !== index
-            )
-          });
-          
-          // Fix the state to prevent ag-Grid errors
-          if (state) {
-            console.log('[DEBUG] Applying fix for duplicate columns');
-            // Create a fixed state with deduplicated columns
-            const fixedState: DocumentState = {
-              ...state,
-              columns: uniqueColumns
-            };
-            
-            // Update the state
-            setState(fixedState);
-            console.log('[DEBUG] State updated with fixed column list');
-          }
-        }
       }
     };
     
@@ -137,54 +106,10 @@ export const useGridSync = (config: GridSyncConfig) => {
     }
   }, []);
   
-  // Row add function
-  const addRow = React.useCallback((rowId?: string, referenceRow?: string) => {
-    console.log('[DEBUG] addRow called:', { rowId, referenceRow });
-    if (wsServiceRef.current) {
-      wsServiceRef.current.addRow(rowId, referenceRow);
-    } else {
-      console.error('[DEBUG] Cannot add row - WebSocketService is not initialized');
-    }
-  }, []);
-  
-  // Row delete function
-  const deleteRow = React.useCallback((rowId: string) => {
-    console.log('[DEBUG] deleteRow called:', { rowId });
-    if (wsServiceRef.current) {
-      wsServiceRef.current.deleteRow(rowId);
-    } else {
-      console.error('[DEBUG] Cannot delete row - WebSocketService is not initialized');
-    }
-  }, []);
-  
-  // Column add function
-  const addColumn = React.useCallback((columnId: string, name: string, cellType?: string, referenceColumn?: string) => {
-    console.log('[DEBUG] addColumn called:', { columnId, name, cellType, referenceColumn });
-    if (wsServiceRef.current) {
-      wsServiceRef.current.addColumn(columnId, name, cellType, referenceColumn);
-    } else {
-      console.error('[DEBUG] Cannot add column - WebSocketService is not initialized');
-    }
-  }, []);
-  
-  // Column delete function
-  const deleteColumn = React.useCallback((columnId: string) => {
-    console.log('[DEBUG] deleteColumn called:', { columnId });
-    if (wsServiceRef.current) {
-      wsServiceRef.current.deleteColumn(columnId);
-    } else {
-      console.error('[DEBUG] Cannot delete column - WebSocketService is not initialized');
-    }
-  }, []);
-  
   return {
     isConnected,
     state,
     error,
-    updateCell,
-    addRow,
-    deleteRow,
-    addColumn,
-    deleteColumn
+    updateCell
   };
 }; 

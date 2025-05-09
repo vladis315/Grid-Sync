@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.closeRedisConnections = exports.getDocumentState = exports.initializeEmptyCellsForRow = exports.getColumnOrder = exports.getRowOrder = exports.deleteColumn = exports.addColumn = exports.deleteRow = exports.addRow = exports.getCellData = exports.setCellData = exports.publishToDocumentChannel = exports.unsubscribeFromDocumentChannel = exports.subscribeToDocumentChannel = exports.getRedisSubClient = exports.getRedisPubClient = exports.getRedisClient = exports.setupRedisConnection = void 0;
+exports.closeRedisConnections = exports.getDocumentState = exports.initializeEmptyCellsForRow = exports.getColumnOrder = exports.getRowOrder = exports.getCellData = exports.setCellData = exports.publishToDocumentChannel = exports.unsubscribeFromDocumentChannel = exports.subscribeToDocumentChannel = exports.getRedisSubClient = exports.getRedisPubClient = exports.getRedisClient = exports.setupRedisConnection = void 0;
 const redis_1 = require("redis");
 // Redis clients
 let redisClient;
@@ -100,78 +100,6 @@ const getCellData = async (tenantId, documentId, rowId, columnId) => {
     return data ? JSON.parse(data) : null;
 };
 exports.getCellData = getCellData;
-/**
- * Add a row to the document's row list
- */
-const addRow = async (tenantId, documentId, rowId, referenceRowId) => {
-    const listKey = `tenant:${tenantId}:doc:${documentId}:rows`;
-    if (referenceRowId) {
-        // Insert at specific position (before referenceRowId)
-        await redisClient.lInsert(listKey, 'BEFORE', referenceRowId, rowId);
-    }
-    else {
-        // Insert at the end
-        await redisClient.rPush(listKey, rowId);
-    }
-    // Return the updated row order
-    return (0, exports.getRowOrder)(tenantId, documentId);
-};
-exports.addRow = addRow;
-/**
- * Delete a row from the document's row list and all its cells
- */
-const deleteRow = async (tenantId, documentId, rowId) => {
-    const listKey = `tenant:${tenantId}:doc:${documentId}:rows`;
-    // Remove row from list
-    await redisClient.lRem(listKey, 1, rowId);
-    // Get all columns to know which cells to delete
-    const columns = await (0, exports.getColumnOrder)(tenantId, documentId);
-    // Delete all cells for this row
-    const deletionPromises = columns.map(columnId => {
-        const cellKey = `tenant:${tenantId}:doc:${documentId}:row:${rowId}:col:${columnId}`;
-        return redisClient.del(cellKey);
-    });
-    await Promise.all(deletionPromises);
-    // Return the updated row order
-    return (0, exports.getRowOrder)(tenantId, documentId);
-};
-exports.deleteRow = deleteRow;
-/**
- * Add a column to the document's column list
- */
-const addColumn = async (tenantId, documentId, columnId, referenceColumnId) => {
-    const listKey = `tenant:${tenantId}:doc:${documentId}:columns`;
-    if (referenceColumnId) {
-        // Insert at specific position (before referenceColumnId)
-        await redisClient.lInsert(listKey, 'BEFORE', referenceColumnId, columnId);
-    }
-    else {
-        // Insert at the end
-        await redisClient.rPush(listKey, columnId);
-    }
-    // Return the updated column order
-    return (0, exports.getColumnOrder)(tenantId, documentId);
-};
-exports.addColumn = addColumn;
-/**
- * Delete a column from the document's column list and all its cells
- */
-const deleteColumn = async (tenantId, documentId, columnId) => {
-    const listKey = `tenant:${tenantId}:doc:${documentId}:columns`;
-    // Remove column from list
-    await redisClient.lRem(listKey, 1, columnId);
-    // Get all rows to know which cells to delete
-    const rows = await (0, exports.getRowOrder)(tenantId, documentId);
-    // Delete all cells for this column
-    const deletionPromises = rows.map(rowId => {
-        const cellKey = `tenant:${tenantId}:doc:${documentId}:row:${rowId}:col:${columnId}`;
-        return redisClient.del(cellKey);
-    });
-    await Promise.all(deletionPromises);
-    // Return the updated column order
-    return (0, exports.getColumnOrder)(tenantId, documentId);
-};
-exports.deleteColumn = deleteColumn;
 /**
  * Get the order of rows for a document
  */

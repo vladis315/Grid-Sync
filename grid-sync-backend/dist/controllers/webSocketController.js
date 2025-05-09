@@ -14,16 +14,8 @@ var MessageType;
     MessageType["JOIN_DOCUMENT"] = "JoinDocument";
     MessageType["LEAVE_DOCUMENT"] = "LeaveDocument";
     MessageType["CELL_UPDATE"] = "CellUpdate";
-    MessageType["ROW_ADD"] = "RowAdd";
-    MessageType["ROW_DELETE"] = "RowDelete";
-    MessageType["COLUMN_ADD"] = "ColumnAdd";
-    MessageType["COLUMN_DELETE"] = "ColumnDelete";
     MessageType["INIT_STATE"] = "InitState";
     MessageType["CELL_UPDATE_RESPONSE"] = "CellUpdateResponse";
-    MessageType["ROW_ADD_RESPONSE"] = "RowAddResponse";
-    MessageType["ROW_DELETE_RESPONSE"] = "RowDeleteResponse";
-    MessageType["COLUMN_ADD_RESPONSE"] = "ColumnAddResponse";
-    MessageType["COLUMN_DELETE_RESPONSE"] = "ColumnDeleteResponse";
     MessageType["ERROR"] = "Error";
 })(MessageType || (MessageType = {}));
 /**
@@ -55,18 +47,6 @@ const setupWebSocketHandlers = (wss) => {
                         break;
                     case MessageType.CELL_UPDATE:
                         await handleCellUpdate(ws, data);
-                        break;
-                    case MessageType.ROW_ADD:
-                        await handleRowAdd(ws, data);
-                        break;
-                    case MessageType.ROW_DELETE:
-                        await handleRowDelete(ws, data);
-                        break;
-                    case MessageType.COLUMN_ADD:
-                        await handleColumnAdd(ws, data);
-                        break;
-                    case MessageType.COLUMN_DELETE:
-                        await handleColumnDelete(ws, data);
                         break;
                     default:
                         sendError(ws, `Unknown message type: ${data.type}`);
@@ -200,108 +180,6 @@ async function handleCellUpdate(ws, data) {
         name,
         valueType: type,
         timestamp
-    };
-    // Publish update to document channel
-    await (0, redisService_1.publishToDocumentChannel)(tenantId, documentId, responseMessage);
-}
-/**
- * Handle ROW_ADD message
- */
-async function handleRowAdd(ws, data) {
-    const { tenantId, documentId, tableId, rowId, referenceRow, timestamp } = data;
-    if (!tenantId || !documentId || !rowId || timestamp === undefined) {
-        sendError(ws, 'Missing required fields for ROW_ADD');
-        return;
-    }
-    // Add row to document and get updated order
-    const updatedRowOrder = await (0, redisService_1.addRow)(tenantId, documentId, rowId, referenceRow);
-    // Initialize empty cells for the new row
-    await (0, redisService_1.initializeEmptyCellsForRow)(tenantId, documentId, rowId, timestamp);
-    // Prepare response message
-    const responseMessage = {
-        type: MessageType.ROW_ADD_RESPONSE,
-        tenantId,
-        documentId,
-        tableId,
-        rowId,
-        referenceRow,
-        timestamp,
-        indexOrder: updatedRowOrder
-    };
-    // Publish update to document channel
-    await (0, redisService_1.publishToDocumentChannel)(tenantId, documentId, responseMessage);
-}
-/**
- * Handle ROW_DELETE message
- */
-async function handleRowDelete(ws, data) {
-    const { tenantId, documentId, tableId, rowId, timestamp } = data;
-    if (!tenantId || !documentId || !rowId) {
-        sendError(ws, 'Missing required fields for ROW_DELETE');
-        return;
-    }
-    // Delete row and all its cells
-    const updatedRowOrder = await (0, redisService_1.deleteRow)(tenantId, documentId, rowId);
-    // Prepare response message
-    const responseMessage = {
-        type: MessageType.ROW_DELETE_RESPONSE,
-        tenantId,
-        documentId,
-        tableId,
-        rowId,
-        timestamp,
-        indexOrder: updatedRowOrder
-    };
-    // Publish update to document channel
-    await (0, redisService_1.publishToDocumentChannel)(tenantId, documentId, responseMessage);
-}
-/**
- * Handle COLUMN_ADD message
- */
-async function handleColumnAdd(ws, data) {
-    const { tenantId, documentId, tableId, columnId, name, type, referenceColumn, timestamp } = data;
-    if (!tenantId || !documentId || !columnId || !name) {
-        sendError(ws, 'Missing required fields for COLUMN_ADD');
-        return;
-    }
-    // Add column to document and get updated order
-    const updatedColumnOrder = await (0, redisService_1.addColumn)(tenantId, documentId, columnId, referenceColumn);
-    // Prepare response message
-    const responseMessage = {
-        type: MessageType.COLUMN_ADD_RESPONSE,
-        tenantId,
-        documentId,
-        tableId,
-        columnId,
-        name,
-        columnType: type,
-        referenceColumn,
-        timestamp,
-        indexOrder: updatedColumnOrder
-    };
-    // Publish update to document channel
-    await (0, redisService_1.publishToDocumentChannel)(tenantId, documentId, responseMessage);
-}
-/**
- * Handle COLUMN_DELETE message
- */
-async function handleColumnDelete(ws, data) {
-    const { tenantId, documentId, tableId, columnId, timestamp } = data;
-    if (!tenantId || !documentId || !columnId) {
-        sendError(ws, 'Missing required fields for COLUMN_DELETE');
-        return;
-    }
-    // Delete column and all its cells
-    const updatedColumnOrder = await (0, redisService_1.deleteColumn)(tenantId, documentId, columnId);
-    // Prepare response message
-    const responseMessage = {
-        type: MessageType.COLUMN_DELETE_RESPONSE,
-        tenantId,
-        documentId,
-        tableId,
-        columnId,
-        timestamp,
-        indexOrder: updatedColumnOrder
     };
     // Publish update to document channel
     await (0, redisService_1.publishToDocumentChannel)(tenantId, documentId, responseMessage);

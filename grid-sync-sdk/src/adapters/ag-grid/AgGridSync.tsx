@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useRef, useImperativeHandle } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import { CellValueChangedEvent, GridApi, RowNode, GetRowIdParams, Module } from 'ag-grid-community';
+import { CellValueChangedEvent, GridApi, GetRowIdParams, Module } from 'ag-grid-community';
 import { v4 as uuidv4 } from 'uuid';
 import { useGridSync } from '../../hooks/useGridSync';
 import { AgGridSyncProps, MessageType, DocumentState, GridSyncConfig } from '../../types';
@@ -50,35 +50,8 @@ export const AgGridSync: React.FC<AgGridSyncProps> = ({
       const rowData = convertStateToAgGridRows(state);
       console.log('[DEBUG] Converted row data for AG Grid:', rowData);
       
-      try {
-        // Check if gridApiRef.current is fully initialized
-        if (!gridApiRef.current.applyTransaction) {
-          console.error('[DEBUG] Grid API applyTransaction method not available - possible module registration issue');
-          console.log('[DEBUG] Available API methods:', Object.keys(gridApiRef.current));
-          
-          // Use setRowData as fallback if available
-          if (typeof gridApiRef.current.setRowData === 'function') {
-            console.log('[DEBUG] Falling back to setRowData API');
-            gridApiRef.current.setRowData(rowData);
-            return;
-          } else {
-            console.error('[DEBUG] Critical error: No valid API method available to update data');
-            return;
-          }
-        }
-        
-        console.log('[DEBUG] Attempting to update grid with transaction API');
-        // Using transaction API to update cells
-        const result = gridApiRef.current.applyTransaction({ update: rowData });
-        console.log('[DEBUG] Transaction result:', result);
-      } catch (e) {
-        console.error('[DEBUG] Transaction API error:', e);
-        // Fallback: if transaction API fails, try to use setRowData if available
-        if (typeof gridApiRef.current.setRowData === 'function') {
-          console.log('[DEBUG] Falling back to setRowData API');
-          gridApiRef.current.setRowData(rowData);
-        }
-      }
+      // Use setRowData as a reliable method to update the grid
+      gridApiRef.current.setRowData(rowData);
     }
   }, [state]);
   

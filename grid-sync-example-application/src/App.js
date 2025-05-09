@@ -2,13 +2,18 @@ import React, { useRef } from 'react';
 import { AgGridSync } from '@gridsync/grid-sdk';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
-import { ClientSideRowModelModule } from 'ag-grid-community';
+import { 
+  ClientSideRowModelModule, 
+  ModuleRegistry,
+  GridApi
+} from 'ag-grid-community';
 
-// No need to register modules explicitly in AG Grid v33.x
-// ModuleRegistry was removed/changed in newer versions
+// Register required modules
+ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
 function App() {
   const gridRef = useRef(null);
+  const gridApiRef = useRef(null);
   
   // Initial row data - rows must be pre-defined since we removed row-adding functionality
   const initialRowData = [
@@ -38,6 +43,11 @@ function App() {
     }
   };
 
+  const onGridReady = (params) => {
+    gridApiRef.current = params.api;
+    console.log('[DEBUG] AG Grid API initialized:', !!gridApiRef.current);
+  };
+
   return (
     <div className="App">
       <h1>GridSync Test</h1>
@@ -57,9 +67,13 @@ function App() {
           gridSyncConfig={gridSyncConfig}
           columnDefs={columnDefs}
           rowData={initialRowData}
-          defaultColDef={{ flex: 1 }}
-          theme="legacy"
-          rowModelType="clientSide"
+          defaultColDef={{ 
+            flex: 1,
+            editable: true,
+            sortable: true,
+            filter: true
+          }}
+          onGridReady={onGridReady}
           modules={[ClientSideRowModelModule]}
         />
       </div>

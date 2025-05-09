@@ -5,16 +5,8 @@ export enum MessageType {
   JOIN_DOCUMENT = 'JoinDocument',
   LEAVE_DOCUMENT = 'LeaveDocument',
   CELL_UPDATE = 'CellUpdate',
-  ROW_ADD = 'RowAdd',
-  ROW_DELETE = 'RowDelete',
-  COLUMN_ADD = 'ColumnAdd',
-  COLUMN_DELETE = 'ColumnDelete',
   INIT_STATE = 'InitState',
   CELL_UPDATE_RESPONSE = 'CellUpdateResponse',
-  ROW_ADD_RESPONSE = 'RowAddResponse',
-  ROW_DELETE_RESPONSE = 'RowDeleteResponse',
-  COLUMN_ADD_RESPONSE = 'ColumnAddResponse',
-  COLUMN_DELETE_RESPONSE = 'ColumnDeleteResponse',
   ERROR = 'Error'
 }
 
@@ -94,90 +86,6 @@ export interface CellUpdateResponseMessage extends BaseMessage {
 }
 
 /**
- * Row add message
- */
-export interface RowAddMessage extends BaseMessage {
-  type: MessageType.ROW_ADD;
-  rowId: string;
-  referenceRow?: string;
-  timestamp: number;
-}
-
-/**
- * Row add response message
- */
-export interface RowAddResponseMessage extends BaseMessage {
-  type: MessageType.ROW_ADD_RESPONSE;
-  rowId: string;
-  referenceRow?: string;
-  timestamp: number;
-  indexOrder: string[];
-}
-
-/**
- * Row delete message
- */
-export interface RowDeleteMessage extends BaseMessage {
-  type: MessageType.ROW_DELETE;
-  rowId: string;
-  timestamp: number;
-}
-
-/**
- * Row delete response message
- */
-export interface RowDeleteResponseMessage extends BaseMessage {
-  type: MessageType.ROW_DELETE_RESPONSE;
-  rowId: string;
-  timestamp: number;
-  indexOrder: string[];
-}
-
-/**
- * Column add message
- */
-export interface ColumnAddMessage extends BaseMessage {
-  type: MessageType.COLUMN_ADD;
-  columnId: string;
-  name: string;
-  cellType?: string;
-  referenceColumn?: string;
-  timestamp: number;
-}
-
-/**
- * Column add response message
- */
-export interface ColumnAddResponseMessage extends BaseMessage {
-  type: MessageType.COLUMN_ADD_RESPONSE;
-  columnId: string;
-  name: string;
-  cellType?: string;
-  referenceColumn?: string;
-  timestamp: number;
-  indexOrder: string[];
-}
-
-/**
- * Column delete message
- */
-export interface ColumnDeleteMessage extends BaseMessage {
-  type: MessageType.COLUMN_DELETE;
-  columnId: string;
-  timestamp: number;
-}
-
-/**
- * Column delete response message
- */
-export interface ColumnDeleteResponseMessage extends BaseMessage {
-  type: MessageType.COLUMN_DELETE_RESPONSE;
-  columnId: string;
-  timestamp: number;
-  indexOrder: string[];
-}
-
-/**
  * Init state message
  */
 export interface InitStateMessage extends BaseMessage {
@@ -201,16 +109,15 @@ export type WebSocketMessage =
   | LeaveDocumentMessage
   | CellUpdateMessage
   | CellUpdateResponseMessage
-  | RowAddMessage
-  | RowAddResponseMessage
-  | RowDeleteMessage
-  | RowDeleteResponseMessage
-  | ColumnAddMessage
-  | ColumnAddResponseMessage
-  | ColumnDeleteMessage
-  | ColumnDeleteResponseMessage
   | InitStateMessage
   | ErrorMessage;
+
+/**
+ * GridSync API interface
+ */
+export interface GridSyncApi {
+  updateCell: (rowId: string, columnId: string, value: any, name?: string, cellType?: string) => void;
+}
 
 /**
  * GridSync configuration
@@ -224,13 +131,7 @@ export interface GridSyncConfig {
   userId: string;
   onStateChange?: (state: DocumentState) => void;
   onError?: (error: string) => void;
-  onReady?: (api: {
-    updateCell: (rowId: string, columnId: string, value: any, name?: string, cellType?: string) => void;
-    addRow: (rowId?: string, referenceRow?: string) => void;
-    deleteRow: (rowId: string) => void;
-    addColumn: (columnId: string, name: string, cellType?: string, referenceColumn?: string) => void;
-    deleteColumn: (columnId: string) => void;
-  }) => void;
+  onReady?: (api: GridSyncApi) => void;
 }
 
 /**

@@ -6,10 +6,6 @@ import {
   unsubscribeFromDocumentChannel,
   setCellData,
   getCellData,
-  addRow,
-  deleteRow,
-  addColumn,
-  deleteColumn,
   getDocumentState,
   initializeEmptyCellsForRow
 } from '../services/redisService';
@@ -31,16 +27,8 @@ enum MessageType {
   JOIN_DOCUMENT = 'JoinDocument',
   LEAVE_DOCUMENT = 'LeaveDocument',
   CELL_UPDATE = 'CellUpdate',
-  ROW_ADD = 'RowAdd',
-  ROW_DELETE = 'RowDelete',
-  COLUMN_ADD = 'ColumnAdd',
-  COLUMN_DELETE = 'ColumnDelete',
   INIT_STATE = 'InitState',
   CELL_UPDATE_RESPONSE = 'CellUpdateResponse',
-  ROW_ADD_RESPONSE = 'RowAddResponse',
-  ROW_DELETE_RESPONSE = 'RowDeleteResponse',
-  COLUMN_ADD_RESPONSE = 'ColumnAddResponse',
-  COLUMN_DELETE_RESPONSE = 'ColumnDeleteResponse',
   ERROR = 'Error'
 }
 
@@ -79,22 +67,6 @@ export const setupWebSocketHandlers = (wss: WebSocketServer) => {
             
           case MessageType.CELL_UPDATE:
             await handleCellUpdate(ws, data);
-            break;
-            
-          case MessageType.ROW_ADD:
-            await handleRowAdd(ws, data);
-            break;
-            
-          case MessageType.ROW_DELETE:
-            await handleRowDelete(ws, data);
-            break;
-            
-          case MessageType.COLUMN_ADD:
-            await handleColumnAdd(ws, data);
-            break;
-            
-          case MessageType.COLUMN_DELETE:
-            await handleColumnDelete(ws, data);
             break;
             
           default:
@@ -273,169 +245,6 @@ async function handleCellUpdate(
     name,
     valueType: type,
     timestamp
-  };
-  
-  // Publish update to document channel
-  await publishToDocumentChannel(tenantId, documentId, responseMessage);
-}
-
-/**
- * Handle ROW_ADD message
- */
-async function handleRowAdd(
-  ws: WebSocket & { tenantId?: string },
-  data: any
-) {
-  const { 
-    tenantId, 
-    documentId, 
-    tableId, 
-    rowId, 
-    referenceRow, 
-    timestamp 
-  } = data;
-  
-  if (!tenantId || !documentId || !rowId || timestamp === undefined) {
-    sendError(ws, 'Missing required fields for ROW_ADD');
-    return;
-  }
-  
-  // Add row to document and get updated order
-  const updatedRowOrder = await addRow(tenantId, documentId, rowId, referenceRow);
-  
-  // Initialize empty cells for the new row
-  await initializeEmptyCellsForRow(tenantId, documentId, rowId, timestamp);
-  
-  // Prepare response message
-  const responseMessage = {
-    type: MessageType.ROW_ADD_RESPONSE,
-    tenantId,
-    documentId,
-    tableId,
-    rowId,
-    referenceRow,
-    timestamp,
-    indexOrder: updatedRowOrder
-  };
-  
-  // Publish update to document channel
-  await publishToDocumentChannel(tenantId, documentId, responseMessage);
-}
-
-/**
- * Handle ROW_DELETE message
- */
-async function handleRowDelete(
-  ws: WebSocket & { tenantId?: string },
-  data: any
-) {
-  const { 
-    tenantId, 
-    documentId, 
-    tableId, 
-    rowId, 
-    timestamp 
-  } = data;
-  
-  if (!tenantId || !documentId || !rowId) {
-    sendError(ws, 'Missing required fields for ROW_DELETE');
-    return;
-  }
-  
-  // Delete row and all its cells
-  const updatedRowOrder = await deleteRow(tenantId, documentId, rowId);
-  
-  // Prepare response message
-  const responseMessage = {
-    type: MessageType.ROW_DELETE_RESPONSE,
-    tenantId,
-    documentId,
-    tableId,
-    rowId,
-    timestamp,
-    indexOrder: updatedRowOrder
-  };
-  
-  // Publish update to document channel
-  await publishToDocumentChannel(tenantId, documentId, responseMessage);
-}
-
-/**
- * Handle COLUMN_ADD message
- */
-async function handleColumnAdd(
-  ws: WebSocket & { tenantId?: string },
-  data: any
-) {
-  const { 
-    tenantId, 
-    documentId, 
-    tableId, 
-    columnId, 
-    name, 
-    type, 
-    referenceColumn, 
-    timestamp 
-  } = data;
-  
-  if (!tenantId || !documentId || !columnId || !name) {
-    sendError(ws, 'Missing required fields for COLUMN_ADD');
-    return;
-  }
-  
-  // Add column to document and get updated order
-  const updatedColumnOrder = await addColumn(tenantId, documentId, columnId, referenceColumn);
-  
-  // Prepare response message
-  const responseMessage = {
-    type: MessageType.COLUMN_ADD_RESPONSE,
-    tenantId,
-    documentId,
-    tableId,
-    columnId,
-    name,
-    columnType: type,
-    referenceColumn,
-    timestamp,
-    indexOrder: updatedColumnOrder
-  };
-  
-  // Publish update to document channel
-  await publishToDocumentChannel(tenantId, documentId, responseMessage);
-}
-
-/**
- * Handle COLUMN_DELETE message
- */
-async function handleColumnDelete(
-  ws: WebSocket & { tenantId?: string },
-  data: any
-) {
-  const { 
-    tenantId, 
-    documentId, 
-    tableId, 
-    columnId, 
-    timestamp 
-  } = data;
-  
-  if (!tenantId || !documentId || !columnId) {
-    sendError(ws, 'Missing required fields for COLUMN_DELETE');
-    return;
-  }
-  
-  // Delete column and all its cells
-  const updatedColumnOrder = await deleteColumn(tenantId, documentId, columnId);
-  
-  // Prepare response message
-  const responseMessage = {
-    type: MessageType.COLUMN_DELETE_RESPONSE,
-    tenantId,
-    documentId,
-    tableId,
-    columnId,
-    timestamp,
-    indexOrder: updatedColumnOrder
   };
   
   // Publish update to document channel

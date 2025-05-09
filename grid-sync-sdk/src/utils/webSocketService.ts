@@ -4,12 +4,7 @@ import {
   GridSyncConfig,
   WebSocketMessage,
   DocumentState,
-  CellUpdateMessage,
-  RowAddMessage,
-  RowDeleteMessage,
-  ColumnAddMessage,
-  ColumnDeleteMessage,
-  ColumnAddResponseMessage
+  CellUpdateMessage
 } from '../types';
 
 /**
@@ -174,87 +169,6 @@ export class WebSocketService {
   }
 
   /**
-   * Add a row
-   */
-  public addRow(rowId: string = uuidv4(), referenceRow?: string): void {
-    const { tenantId, documentId, tableId } = this.config;
-    
-    const message: RowAddMessage = {
-      type: MessageType.ROW_ADD,
-      tenantId,
-      documentId,
-      tableId,
-      rowId,
-      referenceRow,
-      timestamp: Date.now()
-    };
-    
-    this.sendMessage(message);
-  }
-
-  /**
-   * Delete a row
-   */
-  public deleteRow(rowId: string): void {
-    const { tenantId, documentId, tableId } = this.config;
-    
-    const message: RowDeleteMessage = {
-      type: MessageType.ROW_DELETE,
-      tenantId,
-      documentId,
-      tableId,
-      rowId,
-      timestamp: Date.now()
-    };
-    
-    this.sendMessage(message);
-  }
-
-  /**
-   * Add a column
-   */
-  public addColumn(
-    columnId: string, 
-    name: string, 
-    cellType?: string, 
-    referenceColumn?: string
-  ): void {
-    const { tenantId, documentId, tableId } = this.config;
-    
-    const message: ColumnAddMessage = {
-      type: MessageType.COLUMN_ADD,
-      tenantId,
-      documentId,
-      tableId,
-      columnId,
-      name,
-      cellType,
-      referenceColumn,
-      timestamp: Date.now()
-    };
-    
-    this.sendMessage(message);
-  }
-
-  /**
-   * Delete a column
-   */
-  public deleteColumn(columnId: string): void {
-    const { tenantId, documentId, tableId } = this.config;
-    
-    const message: ColumnDeleteMessage = {
-      type: MessageType.COLUMN_DELETE,
-      tenantId,
-      documentId,
-      tableId,
-      columnId,
-      timestamp: Date.now()
-    };
-    
-    this.sendMessage(message);
-  }
-
-  /**
    * Handle WebSocket open event
    */
   private handleOpen = (): void => {
@@ -287,11 +201,6 @@ export class WebSocketService {
         if (this.config.onStateChange) {
           this.config.onStateChange(message.state);
         }
-      } else if (message.type === MessageType.COLUMN_ADD_RESPONSE) {
-        console.log('[DEBUG] COLUMN_ADD_RESPONSE received:', {
-          columnId: (message as ColumnAddResponseMessage).columnId,
-          indexOrder: (message as ColumnAddResponseMessage).indexOrder
-        });
       }
       
       // Notify message listeners

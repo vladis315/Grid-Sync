@@ -82,90 +82,6 @@ export interface CellUpdateResponseMessage extends BaseMessage {
 }
 
 /**
- * Row add message
- */
-export interface RowAddMessage extends BaseMessage {
-  type: 'RowAdd';
-  rowId: string;
-  referenceRow?: string;
-  timestamp: number;
-}
-
-/**
- * Row add response message
- */
-export interface RowAddResponseMessage extends BaseMessage {
-  type: 'RowAddResponse';
-  rowId: string;
-  referenceRow?: string;
-  timestamp: number;
-  indexOrder: string[];
-}
-
-/**
- * Row delete message
- */
-export interface RowDeleteMessage extends BaseMessage {
-  type: 'RowDelete';
-  rowId: string;
-  timestamp: number;
-}
-
-/**
- * Row delete response message
- */
-export interface RowDeleteResponseMessage extends BaseMessage {
-  type: 'RowDeleteResponse';
-  rowId: string;
-  timestamp: number;
-  indexOrder: string[];
-}
-
-/**
- * Column add message
- */
-export interface ColumnAddMessage extends BaseMessage {
-  type: 'ColumnAdd';
-  columnId: string;
-  name: string;
-  columnType?: string;
-  referenceColumn?: string;
-  timestamp: number;
-}
-
-/**
- * Column add response message
- */
-export interface ColumnAddResponseMessage extends BaseMessage {
-  type: 'ColumnAddResponse';
-  columnId: string;
-  name: string;
-  columnType?: string;
-  referenceColumn?: string;
-  timestamp: number;
-  indexOrder: string[];
-}
-
-/**
- * Column delete message
- */
-export interface ColumnDeleteMessage extends BaseMessage {
-  type: 'ColumnDelete';
-  columnId: string;
-  timestamp: number;
-}
-
-/**
- * Column delete response message
- */
-export interface ColumnDeleteResponseMessage extends BaseMessage {
-  type: 'ColumnDeleteResponse';
-  columnId: string;
-  timestamp: number;
-  indexOrder: string[];
-}
-
-/**
  * Init state message
  */
 export interface InitStateMessage extends BaseMessage {
@@ -189,13 +105,5 @@ export type WebSocketMessage =
   | LeaveDocumentMessage
   | CellUpdateMessage
   | CellUpdateResponseMessage
-  | RowAddMessage
-  | RowAddResponseMessage
-  | RowDeleteMessage
-  | RowDeleteResponseMessage
-  | ColumnAddMessage
-  | ColumnAddResponseMessage
-  | ColumnDeleteMessage
-  | ColumnDeleteResponseMessage
   | InitStateMessage
   | ErrorMessage; 
