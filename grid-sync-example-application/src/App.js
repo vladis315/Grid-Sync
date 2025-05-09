@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { AgGridSync } from '@gridsync/grid-sdk';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
@@ -14,19 +14,21 @@ ModuleRegistry.registerModules([ClientSideRowModelModule]);
 function App() {
   const gridRef = useRef(null);
   const gridApiRef = useRef(null);
+  const [rowData, setRowData] = useState(null);
   
-  // Initial row data - rows must be pre-defined since we removed row-adding functionality
+  // Initial row data with IDs that match server data
   const initialRowData = [
-    { id: 'row1', name: '', age: '', country: '' },
-    { id: 'row2', name: '', age: '', country: '' },
-    { id: 'row3', name: '', age: '', country: '' }
+    { id: 'row1', col1: '', col2: '', col3: '' },
+    { id: 'row2', col1: '', col2: '', col3: '' },
+    { id: 'row3', col1: '', col2: '', col3: '' }
   ];
   
-  // Column definitions
+  // Column definitions that match server data
   const columnDefs = [
-    { field: 'name', headerName: 'Name', editable: true },
-    { field: 'age', headerName: 'Age', editable: true },
-    { field: 'country', headerName: 'Country', editable: true }
+    { field: 'id', headerName: 'ID', editable: false, hide: true },
+    { field: 'col1', headerName: 'Column 1', editable: true },
+    { field: 'col2', headerName: 'Column 2', editable: true },
+    { field: 'col3', headerName: 'Column 3', editable: true }
   ];
 
   // GridSync configuration using environment variables
@@ -40,6 +42,26 @@ function App() {
       // Store the grid api for later use
       gridRef.current = api;
       console.log('[DEBUG] Grid API ready:', api);
+    },
+    onError: (error) => {
+      console.error('[ERROR] GridSync error:', error);
+    },
+    onStateChange: (state) => {
+      console.log('[DEBUG] State received:', state);
+      if (state && state.cells) {
+        // Convert server state to AG Grid format
+        const updatedRowData = initialRowData.map(row => {
+          const rowId = row.id;
+          const cellData = state.cells[rowId] || {};
+          return {
+            id: rowId,
+            col1: cellData.col1?.value || '',
+            col2: cellData.col2?.value || '',
+            col3: cellData.col3?.value || ''
+          };
+        });
+        setRowData(updatedRowData);
+      }
     }
   };
 
@@ -66,7 +88,7 @@ function App() {
         <AgGridSync
           gridSyncConfig={gridSyncConfig}
           columnDefs={columnDefs}
-          rowData={initialRowData}
+          rowData={rowData || initialRowData}
           defaultColDef={{ 
             flex: 1,
             editable: true,
@@ -75,6 +97,9 @@ function App() {
           }}
           onGridReady={onGridReady}
           modules={[ClientSideRowModelModule]}
+          rowSelection="multiple"
+          animateRows={true}
+          getRowId={(params) => params.data.id}
         />
       </div>
     </div>
