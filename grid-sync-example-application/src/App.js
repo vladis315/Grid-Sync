@@ -37,37 +37,17 @@ function App() {
       console.log('[DEBUG] Grid API ready:', api);
     }
   };
-  
-  // Handler for directly updating a cell
-  const handleUpdateCell = () => {
-    if (gridRef.current) {
-      const rowId = prompt('Enter row ID', 'row1');
-      const columnId = prompt('Enter column ID', 'name');
-      const value = prompt('Enter cell value', 'Test Value');
-      
-      if (rowId && columnId && value) {
-        gridRef.current.updateCell(rowId, columnId, value);
-      }
-    }
-  };
 
   return (
     <div className="App">
       <h1>GridSync Test</h1>
       
-      {/* Control Panel */}
+      {/* Info Panel */}
       <div style={{ marginBottom: '20px', padding: '10px', background: '#f5f5f5', borderRadius: '5px' }}>
-        <h3>Grid Controls</h3>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button 
-            onClick={handleUpdateCell}
-            style={{ padding: '8px 16px', background: '#FF9800', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-          >
-            Update Cell Data
-          </button>
-        </div>
-        <div style={{ marginTop: '10px', fontSize: '14px', color: '#666' }}>
-          <p>Note: This version only supports cell value syncing. Row and column structure must be pre-defined.</p>
+        <h3>GridSync Cell-Value-Only Mode</h3>
+        <div style={{ fontSize: '14px', color: '#666' }}>
+          <p>This version only supports cell value syncing. Row and column structure must be pre-defined.</p>
+          <p>Simply edit cells directly in the grid by double-clicking or pressing Enter on a cell. Changes will automatically sync with other connected clients.</p>
         </div>
       </div>
       
