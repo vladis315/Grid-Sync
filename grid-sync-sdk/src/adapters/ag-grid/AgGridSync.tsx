@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useRef, useImperativeHandle } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import { CellValueChangedEvent, GridApi, RowNode } from 'ag-grid-community';
+import { CellValueChangedEvent, GridApi, RowNode, GetRowIdParams, Module } from 'ag-grid-community';
 import { v4 as uuidv4 } from 'uuid';
 import { useGridSync } from '../../hooks/useGridSync';
-import { AgGridSyncProps, MessageType, DocumentState } from '../../types';
+import { AgGridSyncProps, MessageType, DocumentState, GridSyncConfig } from '../../types';
 
 /**
  * AgGridSync component for integrating AG Grid with GridSync
@@ -68,40 +68,16 @@ export const AgGridSync: React.FC<AgGridSyncProps> = ({
         }
         
         console.log('[DEBUG] Attempting to update grid with transaction API');
-        // Try to use the transaction API first
+        // Using transaction API to update cells
         const result = gridApiRef.current.applyTransaction({ update: rowData });
         console.log('[DEBUG] Transaction result:', result);
-        
-        // If no rows were updated, try adding them instead
-        if (result && result.update && result.update.length === 0) {
-          console.log('[DEBUG] No rows updated, trying to add rows instead');
-          const addResult = gridApiRef.current.applyTransaction({ add: rowData });
-          console.log('[DEBUG] Add transaction result:', addResult);
-        }
       } catch (e) {
         console.error('[DEBUG] Transaction API error:', e);
         // Fallback: if transaction API fails, try to use setRowData if available
         if (typeof gridApiRef.current.setRowData === 'function') {
           console.log('[DEBUG] Falling back to setRowData API');
           gridApiRef.current.setRowData(rowData);
-        } else {
-          console.log('[DEBUG] Last resort: clear and add rows one by one');
-          // As a last resort, clear all data and then set it again using the API that's available
-          gridApiRef.current.setRowData([]);
-          rowData.forEach(row => {
-            try {
-              const addResult = gridApiRef.current?.applyTransaction({ add: [row] });
-              console.log('[DEBUG] Adding single row result:', addResult);
-            } catch (addError) {
-              console.error('[DEBUG] Error adding row:', addError);
-            }
-          });
         }
-      }
-      
-      // Debug column state
-      if (gridApiRef.current.getColumnDefs) {
-        console.log('[DEBUG] Grid columns state:', gridApiRef.current.getColumnDefs());
       }
     }
   }, [state]);
@@ -124,7 +100,7 @@ export const AgGridSync: React.FC<AgGridSyncProps> = ({
       modules={modules}
       onGridReady={onGridReady}
       onCellValueChanged={handleCellValueChanged}
-      getRowId={(params) => params.data.id || params.data.rowId}
+      getRowId={(params: GetRowIdParams) => params.data.id || params.data.rowId}
     />
   );
 };

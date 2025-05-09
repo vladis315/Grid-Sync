@@ -234,7 +234,7 @@ export interface GridSyncConfig {
  */
 export interface AgGridSyncProps {
   gridSyncConfig: GridSyncConfig;
-  modules?: any[];
+  modules?: any[]; // AG Grid modules
   // AG Grid component props can be extended here
   [key: string]: any;
 } 

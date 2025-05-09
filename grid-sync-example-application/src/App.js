@@ -1,16 +1,21 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import { AgGridSync } from '@gridsync/grid-sdk';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import { ClientSideRowModelModule } from 'ag-grid-community';
-import { v4 as uuidv4 } from 'uuid';
 
 // No need to register modules explicitly in AG Grid v33.x
 // ModuleRegistry was removed/changed in newer versions
 
 function App() {
-  const [rowIds, setRowIds] = useState([]);
   const gridRef = useRef(null);
+  
+  // Initial row data - rows must be pre-defined since we removed row-adding functionality
+  const initialRowData = [
+    { id: 'row1', name: '', age: '', country: '' },
+    { id: 'row2', name: '', age: '', country: '' },
+    { id: 'row3', name: '', age: '', country: '' }
+  ];
   
   // Column definitions
   const columnDefs = [
@@ -33,36 +38,16 @@ function App() {
     }
   };
   
-  // Handler functions for UI buttons
-  const handleAddRow = () => {
+  // Handler for directly updating a cell
+  const handleUpdateCell = () => {
     if (gridRef.current) {
-      const rowId = uuidv4();
-      gridRef.current.addRow(rowId);
-      setRowIds(prev => [...prev, rowId]);
-    }
-  };
-  
-  const handleAddColumn = () => {
-    if (gridRef.current) {
-      const columnId = prompt('Enter column ID', 'newColumn');
-      const columnName = prompt('Enter column name', 'New Column');
-      if (columnId && columnName) {
-        gridRef.current.addColumn(columnId, columnName);
-      }
-    }
-  };
-  
-  const handleAddCellData = () => {
-    if (gridRef.current && rowIds.length > 0) {
-      const rowId = rowIds[0]; // Use the first row for simplicity
+      const rowId = prompt('Enter row ID', 'row1');
       const columnId = prompt('Enter column ID', 'name');
       const value = prompt('Enter cell value', 'Test Value');
       
-      if (columnId && value) {
+      if (rowId && columnId && value) {
         gridRef.current.updateCell(rowId, columnId, value);
       }
-    } else {
-      alert('Add a row first!');
     }
   };
 
@@ -75,23 +60,14 @@ function App() {
         <h3>Grid Controls</h3>
         <div style={{ display: 'flex', gap: '10px' }}>
           <button 
-            onClick={handleAddRow}
-            style={{ padding: '8px 16px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-          >
-            Add Row
-          </button>
-          <button 
-            onClick={handleAddColumn}
-            style={{ padding: '8px 16px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-          >
-            Add Column
-          </button>
-          <button 
-            onClick={handleAddCellData}
+            onClick={handleUpdateCell}
             style={{ padding: '8px 16px', background: '#FF9800', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
           >
-            Add Cell Data
+            Update Cell Data
           </button>
+        </div>
+        <div style={{ marginTop: '10px', fontSize: '14px', color: '#666' }}>
+          <p>Note: This version only supports cell value syncing. Row and column structure must be pre-defined.</p>
         </div>
       </div>
       
@@ -100,6 +76,7 @@ function App() {
         <AgGridSync
           gridSyncConfig={gridSyncConfig}
           columnDefs={columnDefs}
+          rowData={initialRowData}
           defaultColDef={{ flex: 1 }}
           theme="legacy"
           rowModelType="clientSide"
