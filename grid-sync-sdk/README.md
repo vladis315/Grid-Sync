@@ -6,7 +6,7 @@ This is the React SDK for integrating with the GridSync real-time collaboration 
 
 - Ready-to-use components for popular grid libraries (AG Grid, etc.)
 - WebSocket connection management
-- Real-time data synchronization
+- Real-time cell value synchronization
 
 ## Installation
 
@@ -55,6 +55,10 @@ const App = () => {
   );
 };
 ```
+
+## Important Note
+
+This version of the SDK supports only real-time syncing of cell value changes. It does not include functionality for adding/removing rows or columns. All grid structure changes should be handled through your application's own logic.
 
 ## Development
 

@@ -14,7 +14,7 @@ export const AgGridSync: React.FC<AgGridSyncProps> = ({
   ...agGridProps
 }) => {
   // Get the grid sync hook
-  const { isConnected, state, error, updateCell, addRow, deleteRow, addColumn, deleteColumn } = useGridSync(gridSyncConfig);
+  const { isConnected, state, error, updateCell } = useGridSync(gridSyncConfig);
   
   // Reference to AG Grid API
   const gridApiRef = useRef<GridApi | null>(null);
@@ -23,14 +23,10 @@ export const AgGridSync: React.FC<AgGridSyncProps> = ({
   useEffect(() => {
     if (gridSyncConfig.onReady) {
       gridSyncConfig.onReady({
-        updateCell,
-        addRow,
-        deleteRow,
-        addColumn,
-        deleteColumn
+        updateCell
       });
     }
-  }, [updateCell, addRow, deleteRow, addColumn, deleteColumn, gridSyncConfig.onReady]);
+  }, [updateCell, gridSyncConfig.onReady]);
   
   // Handle cell value changed
   const handleCellValueChanged = useCallback((event: CellValueChangedEvent) => {

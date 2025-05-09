@@ -226,10 +226,6 @@ export interface GridSyncConfig {
   onError?: (error: string) => void;
   onReady?: (api: {
     updateCell: (rowId: string, columnId: string, value: any, name?: string, cellType?: string) => void;
-    addRow: (rowId?: string, referenceRow?: string) => void;
-    deleteRow: (rowId: string) => void;
-    addColumn: (columnId: string, name: string, cellType?: string, referenceColumn?: string) => void;
-    deleteColumn: (columnId: string) => void;
   }) => void;
 }
 

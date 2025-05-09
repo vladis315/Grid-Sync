@@ -137,54 +137,10 @@ export const useGridSync = (config: GridSyncConfig) => {
     }
   }, []);
   
-  // Row add function
-  const addRow = React.useCallback((rowId?: string, referenceRow?: string) => {
-    console.log('[DEBUG] addRow called:', { rowId, referenceRow });
-    if (wsServiceRef.current) {
-      wsServiceRef.current.addRow(rowId, referenceRow);
-    } else {
-      console.error('[DEBUG] Cannot add row - WebSocketService is not initialized');
-    }
-  }, []);
-  
-  // Row delete function
-  const deleteRow = React.useCallback((rowId: string) => {
-    console.log('[DEBUG] deleteRow called:', { rowId });
-    if (wsServiceRef.current) {
-      wsServiceRef.current.deleteRow(rowId);
-    } else {
-      console.error('[DEBUG] Cannot delete row - WebSocketService is not initialized');
-    }
-  }, []);
-  
-  // Column add function
-  const addColumn = React.useCallback((columnId: string, name: string, cellType?: string, referenceColumn?: string) => {
-    console.log('[DEBUG] addColumn called:', { columnId, name, cellType, referenceColumn });
-    if (wsServiceRef.current) {
-      wsServiceRef.current.addColumn(columnId, name, cellType, referenceColumn);
-    } else {
-      console.error('[DEBUG] Cannot add column - WebSocketService is not initialized');
-    }
-  }, []);
-  
-  // Column delete function
-  const deleteColumn = React.useCallback((columnId: string) => {
-    console.log('[DEBUG] deleteColumn called:', { columnId });
-    if (wsServiceRef.current) {
-      wsServiceRef.current.deleteColumn(columnId);
-    } else {
-      console.error('[DEBUG] Cannot delete column - WebSocketService is not initialized');
-    }
-  }, []);
-  
   return {
     isConnected,
     state,
     error,
-    updateCell,
-    addRow,
-    deleteRow,
-    addColumn,
-    deleteColumn
+    updateCell
   };
 }; 
