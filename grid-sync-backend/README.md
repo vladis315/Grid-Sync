@@ -8,6 +8,7 @@ This is the backend server for GridSync, a multi-tenant, real-time collaboration
 - **Real-Time Collaboration:** Synchronize grid edits in real time between multiple users.
 - **Persistence:** Store document state in Redis with optional persistence to origin databases.
 - **WebSocket API:** Real-time communication with connected clients.
+- **Thin Client Support:** Works with the new thin client approach in GridSync SDK.
 
 ## Requirements
 
@@ -56,6 +57,26 @@ The server exposes the following endpoints:
 
 - `GET /health` - Health check endpoint
 - `WS /realtime` - WebSocket endpoint for real-time communication
+
+### WebSocket Messages
+
+#### Client to Server
+
+- `AUTHENTICATE` - Authenticate the client with API key and tenant info
+- `UPDATE_CELL` - Update a cell value
+- `ADD_ROW` - Add a new row
+- `UPDATE_ROW` - Update an entire row
+- `DELETE_ROW` - Delete a row
+
+#### Server to Client
+
+- `AUTH_RESPONSE` - Authentication response
+- `STATE_UPDATE` - Full or partial state update
+- `ERROR` - Error message
+
+## Integration with GridSync SDK
+
+The server is designed to work with the GridSync SDK thin client approach. See the SDK documentation for integration details.
 
 ## License
 

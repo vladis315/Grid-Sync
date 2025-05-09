@@ -1,70 +1,107 @@
-# Getting Started with Create React App
+# GridSync Example Application
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is an example application demonstrating the integration of GridSync's thin client with AG Grid for real-time collaboration.
 
-## Available Scripts
+## About
 
-In the project directory, you can run:
+This application showcases how to use the `@gridsync/grid-sdk` package to add real-time collaboration features to an AG Grid implementation. It demonstrates:
 
-### `npm start`
+- Setting up the GridSyncClient
+- Connecting it to AG Grid
+- Handling cell value changes
+- Processing state updates from the server
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Key Features
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- Real-time synchronization of cell edits
+- Multi-user collaboration
+- Integration with standard AG Grid API
+- Minimal wrapper code needed
 
-### `npm test`
+## Getting Started
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Prerequisites
 
-### `npm run build`
+- Node.js 16+ installed
+- Access to a running GridSync Server instance
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Installation
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1. Clone this repository
+2. Install dependencies:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+npm install
+```
 
-### `npm run eject`
+3. Configure environment variables:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Create a `.env` file in the project root with:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```
+REACT_APP_BACKEND_URL=ws://localhost:3000/realtime
+REACT_APP_API_KEY=test-api-key-1
+REACT_APP_TENANT_ID=tenant1
+REACT_APP_DOCUMENT_ID=doc1
+REACT_APP_USER_ID=user1
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+4. Start the development server:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```bash
+npm start
+```
 
-## Learn More
+## How It Works
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+This example uses a thin client approach that:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+1. Creates a GridSyncClient instance in a React effect
+2. Connects the client to the AG Grid API in the onGridReady callback
+3. Sends cell updates to the server on cell value changes
+4. Updates the grid when state changes are received from the server
 
-### Code Splitting
+## Code Structure
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+- `src/App.js` - Main application component with GridSync integration
+- `public/` - Static assets
 
-### Analyzing the Bundle Size
+## Integration Example
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```jsx
+import { GridSyncClient } from '@gridsync/grid-sdk';
+import { AgGridReact } from 'ag-grid-react';
 
-### Making a Progressive Web App
+// Initialize client
+const syncClient = new GridSyncClient({
+  serverUrl: 'ws://localhost:3000/realtime',
+  // Other config...
+});
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+// Connect to grid
+function onGridReady(params) {
+  syncClient.connect(params.api);
+}
 
-### Advanced Configuration
+// Send updates to server
+function onCellValueChanged(params) {
+  syncClient.updateCell({
+    rowId: params.data.id,
+    columnId: params.colDef.field,
+    value: params.newValue
+  });
+}
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+// Render grid
+<AgGridReact
+  onGridReady={onGridReady}
+  onCellValueChanged={onCellValueChanged}
+  // Other AG Grid props...
+/>
+```
 
-### Deployment
+## Additional Resources
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- [GridSync SDK Documentation](../grid-sdk/README.md)
+- [GridSync Server Documentation](../grid-sync-backend/README.md)
+- [AG Grid Documentation](https://www.ag-grid.com/documentation/)
