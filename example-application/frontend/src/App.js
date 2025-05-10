@@ -16,13 +16,10 @@ ModuleRegistry.registerModules([
 function App() {
   const gridRef = useRef(null);
   const syncClientRef = useRef(null);
-  const [rowData, setRowData] = useState([
-    { id: 'row1', col1: 'Test Cell 1-1', col2: 'Test Cell 1-2', col3: 'Test Cell 1-3' },
-    { id: 'row2', col1: 'Test Cell 2-1', col2: 'Test Cell 2-2', col3: 'Test Cell 2-3' },
-    { id: 'row3', col1: 'Test Cell 3-1', col2: 'Test Cell 3-2', col3: 'Test Cell 3-3' }
-  ]);
+  const [rowData, setRowData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Column definitions that match server data
+  // Column definitions
   const [columnDefs] = useState([
     { field: 'id', headerName: 'ID', editable: false },
     { field: 'col1', headerName: 'Column 1', editable: true },
@@ -55,9 +52,11 @@ function App() {
         userId: process.env.REACT_APP_USER_ID || 'user1',
         onReady: (client) => {
           console.log('[DEBUG] GridSync client ready');
+          setIsLoading(false);
         },
         onError: (error) => {
           console.error('[ERROR] GridSync error:', error);
+          setIsLoading(false);
         },
         onStateChange: (state) => {
           console.log('[DEBUG] State received:', state);
@@ -70,25 +69,33 @@ function App() {
           }
           
           if (state && state.cells) {
-            setRowData(prevRowData => {
-              // Deep clone to avoid mutation
-              const newRowData = JSON.parse(JSON.stringify(prevRowData));
-              
-              // Update cell data from server state
-              Object.entries(state.cells).forEach(([rowId, rowCells]) => {
-                const rowIndex = newRowData.findIndex(r => r.id === rowId);
-                if (rowIndex >= 0) {
-                  // Update cell values
-                  Object.entries(rowCells).forEach(([colId, cellData]) => {
+            // Transform the state data into AG Grid format
+            const newRowData = [];
+            
+            if (state.rows && state.rows.length > 0) {
+              state.rows.forEach(rowId => {
+                const rowData = { id: rowId };
+                
+                if (state.cells[rowId]) {
+                  Object.entries(state.cells[rowId]).forEach(([colId, cellData]) => {
                     if (cellData && cellData.value !== undefined) {
-                      newRowData[rowIndex][colId] = cellData.value;
+                      rowData[colId] = cellData.value;
                     }
                   });
                 }
+                
+                newRowData.push(rowData);
               });
-              
-              return newRowData;
-            });
+            } else {
+              // Fallback to placeholder data if no data in Redis
+              newRowData.push(
+                { id: 'row1', col1: '', col2: '', col3: '' },
+                { id: 'row2', col1: '', col2: '', col3: '' },
+                { id: 'row3', col1: '', col2: '', col3: '' }
+              );
+            }
+            
+            setRowData(newRowData);
           }
         }
       });
@@ -133,44 +140,25 @@ function App() {
     });
   };
 
-  // Function to manually update a cell
-  const updateFirstRow = () => {
-    const newValue = 'Manual update ' + Date.now().toString().slice(-4);
-    
-    // Update local state first
-    setRowData(prevData => {
-      const newData = [...prevData];
-      if (newData.length > 0) {
-        newData[0] = { ...newData[0], col1: newValue };
-      }
-      return newData;
-    });
-    
-    // Then send update to server
-    if (syncClientRef.current) {
-      syncClientRef.current.updateCell({
-        rowId: 'row1',
-        columnId: 'col1',
-        value: newValue
-      });
-    }
-  };
-
   return (
     <div className="App">
       <h1>GridSync Test</h1>
       
       {/* Info Panel */}
       <div style={{ marginBottom: '20px', padding: '10px', background: '#f5f5f5', borderRadius: '5px' }}>
-        <h3>GridSync Thin Client Integration</h3>
+        <h3>GridSync Client Integration</h3>
         <div style={{ fontSize: '14px', color: '#666' }}>
-          <p>This example demonstrates the thin client approach for integrating with AG Grid.</p>
-          <p>Simply edit cells directly in the grid by double-clicking or pressing Enter on a cell. Changes will automatically sync with other connected clients.</p>
-        </div>
-        <div>
-          <button onClick={updateFirstRow}>Update First Row</button>
+          <p>This example demonstrates real-time collaborative editing with Redis and database persistence.</p>
+          <p>Simply edit cells directly in the grid by double-clicking or pressing Enter on a cell. Changes automatically sync with all clients.</p>
         </div>
       </div>
+      
+      {/* Loading indicator */}
+      {isLoading && (
+        <div style={{ textAlign: 'center', margin: '20px' }}>
+          <p>Loading data from server...</p>
+        </div>
+      )}
       
       {/* Grid */}
       <div className="ag-theme-alpine" style={{ height: 500, width: '90%', margin: '0 auto' }}>
@@ -182,9 +170,9 @@ function App() {
           onGridReady={onGridReady}
           onCellValueChanged={onCellValueChanged}
           getRowId={getRowId}
-          stopEditingWhenCellsLoseFocus={false}
-          enterMovesDown={false}
-          enterMovesDownAfterEdit={false}
+          stopEditingWhenCellsLoseFocus={true}
+          enterMovesDown={true}
+          enterMovesDownAfterEdit={true}
         />
       </div>
     </div>

@@ -92,9 +92,49 @@ async function handleJoinDocument(ws, data) {
             }
         }
     });
-    // Fetch initial document state
-    const state = await (0, redisService_1.getDocumentState)(tenantId, documentId);
-    // Send initial state to client
+    // First, check if we have state in Redis
+    let state = await (0, redisService_1.getDocumentState)(tenantId, documentId);
+    // If Redis has no data or is empty, load from the database
+    if (!state || !state.rows || state.rows.length === 0) {
+        try {
+            // Fetch data from the persistence API
+            const apiUrl = process.env.PERSISTENCE_API_URL || 'http://localhost:5000/api';
+            const response = await fetch(`${apiUrl}/documents/${tenantId}/${documentId}`);
+            if (response.ok) {
+                const data = await response.json();
+                state = data.state;
+                // Buffer all cells in Redis
+                if (state && state.cells) {
+                    for (const rowId in state.cells) {
+                        for (const columnId in state.cells[rowId]) {
+                            const cellData = state.cells[rowId][columnId];
+                            await (0, redisService_1.setCellData)(tenantId, documentId, rowId, columnId, cellData);
+                        }
+                    }
+                }
+                // Store row and column orders
+                if (state.rows && state.rows.length > 0) {
+                    const rowsKey = `tenant:${tenantId}:doc:${documentId}:rows`;
+                    const redisClient = (0, redisService_1.getRedisClient)();
+                    await redisClient.del(rowsKey);
+                    await redisClient.rPush(rowsKey, state.rows);
+                }
+                if (state.columns && state.columns.length > 0) {
+                    const columnsKey = `tenant:${tenantId}:doc:${documentId}:columns`;
+                    const redisClient = (0, redisService_1.getRedisClient)();
+                    await redisClient.del(columnsKey);
+                    await redisClient.rPush(columnsKey, state.columns);
+                }
+            }
+            else {
+                console.error('Failed to fetch document data from database:', await response.text());
+            }
+        }
+        catch (error) {
+            console.error('Error loading document data from database:', error);
+        }
+    }
+    // Send state to client
     ws.send(JSON.stringify({
         type: MessageType.INIT_STATE,
         tenantId,
@@ -178,6 +218,34 @@ async function handleCellUpdate(ws, data) {
     };
     // Publish update to document channel
     await (0, redisService_1.publishToDocumentChannel)(tenantId, documentId, responseMessage);
+    // Also save to database (new persistence layer)
+    try {
+        // Make a request to the persistence API
+        const apiUrl = process.env.PERSISTENCE_API_URL || 'http://localhost:5000/api';
+        const response = await fetch(`${apiUrl}/cells`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                cellId: cellData.cellId,
+                rowId,
+                columnId,
+                documentId,
+                tenantId,
+                value,
+                name,
+                type,
+                timestamp
+            }),
+        });
+        if (!response.ok) {
+            console.error('Failed to persist cell data:', await response.text());
+        }
+    }
+    catch (error) {
+        console.error('Error persisting cell data:', error);
+    }
 }
 /**
  * Send error message to client
