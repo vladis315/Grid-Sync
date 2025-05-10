@@ -1,4 +1,5 @@
 import { GridSyncConfig, CellUpdateParams, ConnectionStatus, GridSyncMessage } from './types';
+import { MESSAGE_TYPES } from './messageTypes';
 
 /**
  * GridSyncClient - A thin real-time layer for AG Grid
@@ -42,7 +43,7 @@ export class GridSyncClient {
    */
   public updateCell(params: CellUpdateParams): void {
     this.sendMessage({
-      type: 'CellUpdate',
+      type: MESSAGE_TYPES.CELL_UPDATE,
       tenantId: this.config.tenantId,
       documentId: this.config.documentId,
       userId: this.config.userId,
@@ -115,7 +116,7 @@ export class GridSyncClient {
     // Send join document message instead of authentication 
     // (authentication is handled via API key in URL)
     this.sendMessage({
-      type: 'JoinDocument',
+      type: MESSAGE_TYPES.JOIN_DOCUMENT,
       tenantId: this.config.tenantId,
       documentId: this.config.documentId,
       userId: this.config.userId
@@ -158,20 +159,20 @@ export class GridSyncClient {
       const message = JSON.parse(event.data) as GridSyncMessage;
       
       switch (message.type) {
-        case 'INIT_STATE':
+        case MESSAGE_TYPES.INIT_STATE:
           if (this.config.onStateChange) {
             this.config.onStateChange(message.state);
           }
           break;
           
-        case 'CELL_UPDATE_RESPONSE':
+        case MESSAGE_TYPES.CELL_UPDATE_RESPONSE:
           if (this.config.onStateChange) {
             // Notify app about the updated cell
             this.config.onStateChange({ cells: message.data });
           }
           break;
           
-        case 'Error':
+        case MESSAGE_TYPES.ERROR:
           if (this.config.onError) {
             this.config.onError({
               type: 'ServerError',
