@@ -40,7 +40,7 @@ export interface BaseMessage {
  * Join document message
  */
 export interface JoinDocumentMessage extends BaseMessage {
-  type: 'JoinDocument';
+  type: 'JOIN_DOCUMENT';
   userId: string;
 }
 
@@ -48,7 +48,7 @@ export interface JoinDocumentMessage extends BaseMessage {
  * Leave document message
  */
 export interface LeaveDocumentMessage extends BaseMessage {
-  type: 'LeaveDocument';
+  type: 'LEAVE_DOCUMENT';
   userId: string;
 }
 
@@ -56,7 +56,7 @@ export interface LeaveDocumentMessage extends BaseMessage {
  * Cell update message
  */
 export interface CellUpdateMessage extends BaseMessage {
-  type: 'CellUpdate';
+  type: 'CELL_UPDATE';
   rowId: string;
   columnId: string;
   cellId?: string;
@@ -70,7 +70,7 @@ export interface CellUpdateMessage extends BaseMessage {
  * Cell update response message
  */
 export interface CellUpdateResponseMessage extends BaseMessage {
-  type: 'CellUpdateResponse';
+  type: 'CELL_UPDATE_RESPONSE';
   rowId: string;
   columnId: string;
   cellId: string;
@@ -85,7 +85,7 @@ export interface CellUpdateResponseMessage extends BaseMessage {
  * Init state message
  */
 export interface InitStateMessage extends BaseMessage {
-  type: 'InitState';
+  type: 'INIT_STATE';
   state: DocumentState;
 }
 
@@ -93,7 +93,7 @@ export interface InitStateMessage extends BaseMessage {
  * Error message
  */
 export interface ErrorMessage {
-  type: 'Error';
+  type: 'ERROR';
   message: string;
 }
 

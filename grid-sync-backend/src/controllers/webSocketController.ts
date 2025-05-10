@@ -1,18 +1,18 @@
-import { WebSocketServer, WebSocket } from 'ws';
+import { WebSocket, WebSocketServer } from 'ws';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  publishToDocumentChannel,
+import { 
   subscribeToDocumentChannel,
   unsubscribeFromDocumentChannel,
-  setCellData,
-  getCellData,
   getDocumentState,
-  initializeEmptyCellsForRow
+  getCellData,
+  setCellData,
+  publishToDocumentChannel
 } from '../services/redisService';
+import { MESSAGE_TYPES } from '../types/messageTypes';
 
 // Store connected clients by documentId
 interface ConnectedClient {
-  ws: WebSocket;
+  ws: WebSocket & { tenantId?: string };
   tenantId: string;
   userId: string;
 }
@@ -23,14 +23,7 @@ const documentConnections: Record<string, ConnectedClient[]> = {};
 /**
  * Message types for WebSocket communication
  */
-enum MessageType {
-  JOIN_DOCUMENT = 'JoinDocument',
-  LEAVE_DOCUMENT = 'LeaveDocument',
-  CELL_UPDATE = 'CellUpdate',
-  INIT_STATE = 'InitState',
-  CELL_UPDATE_RESPONSE = 'CellUpdateResponse',
-  ERROR = 'Error'
-}
+const MessageType = MESSAGE_TYPES;
 
 /**
  * Setup WebSocket handlers
@@ -83,14 +76,16 @@ export const setupWebSocketHandlers = (wss: WebSocketServer) => {
       console.log('Client disconnected');
       
       // Remove client from all document connections
-      for (const documentId in documentConnections) {
-        documentConnections[documentId] = documentConnections[documentId].filter(
+      for (const documentKey in documentConnections) {
+        documentConnections[documentKey] = documentConnections[documentKey].filter(
           client => client.ws !== ws
         );
         
-        // Clean up empty arrays
-        if (documentConnections[documentId].length === 0) {
-          delete documentConnections[documentId];
+        // If no more clients for this document, unsubscribe from channel
+        if (documentConnections[documentKey].length === 0) {
+          const [tenantId, documentId] = documentKey.split(':');
+          unsubscribeFromDocumentChannel(tenantId, documentId);
+          delete documentConnections[documentKey];
         }
       }
     });

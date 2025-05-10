@@ -4,20 +4,13 @@ exports.setupWebSocketHandlers = void 0;
 const ws_1 = require("ws");
 const uuid_1 = require("uuid");
 const redisService_1 = require("../services/redisService");
+const messageTypes_1 = require("../types/messageTypes");
 // Map of document connections: documentId -> array of clients
 const documentConnections = {};
 /**
  * Message types for WebSocket communication
  */
-var MessageType;
-(function (MessageType) {
-    MessageType["JOIN_DOCUMENT"] = "JoinDocument";
-    MessageType["LEAVE_DOCUMENT"] = "LeaveDocument";
-    MessageType["CELL_UPDATE"] = "CellUpdate";
-    MessageType["INIT_STATE"] = "InitState";
-    MessageType["CELL_UPDATE_RESPONSE"] = "CellUpdateResponse";
-    MessageType["ERROR"] = "Error";
-})(MessageType || (MessageType = {}));
+const MessageType = messageTypes_1.MESSAGE_TYPES;
 /**
  * Setup WebSocket handlers
  */
@@ -61,11 +54,13 @@ const setupWebSocketHandlers = (wss) => {
         ws.on('close', () => {
             console.log('Client disconnected');
             // Remove client from all document connections
-            for (const documentId in documentConnections) {
-                documentConnections[documentId] = documentConnections[documentId].filter(client => client.ws !== ws);
-                // Clean up empty arrays
-                if (documentConnections[documentId].length === 0) {
-                    delete documentConnections[documentId];
+            for (const documentKey in documentConnections) {
+                documentConnections[documentKey] = documentConnections[documentKey].filter(client => client.ws !== ws);
+                // If no more clients for this document, unsubscribe from channel
+                if (documentConnections[documentKey].length === 0) {
+                    const [tenantId, documentId] = documentKey.split(':');
+                    (0, redisService_1.unsubscribeFromDocumentChannel)(tenantId, documentId);
+                    delete documentConnections[documentKey];
                 }
             }
         });

@@ -1,0 +1,11 @@
+/**
+ * Message type constants for WebSocket communication
+ */
+export const MESSAGE_TYPES = {
+  JOIN_DOCUMENT: 'JOIN_DOCUMENT',
+  LEAVE_DOCUMENT: 'LEAVE_DOCUMENT',
+  CELL_UPDATE: 'CELL_UPDATE',
+  INIT_STATE: 'INIT_STATE',
+  CELL_UPDATE_RESPONSE: 'CELL_UPDATE_RESPONSE',
+  ERROR: 'ERROR'
+}; 
