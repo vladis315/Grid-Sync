@@ -40,7 +40,16 @@ export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'er
 /**
  * Message types for WebSocket communication
  */
-export interface GridSyncMessage {
+export type GridSyncMessage = {
   type: string;
-  data: any;
+  data?: any;
+  tenantId?: string;
+  documentId?: string;
+  userId?: string;
+  rowId?: string;
+  columnId?: string;
+  value?: any;
+  timestamp?: number;
+  state?: any;
+  message?: string;
 } 

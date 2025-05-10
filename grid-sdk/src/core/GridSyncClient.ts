@@ -42,12 +42,14 @@ export class GridSyncClient {
    */
   public updateCell(params: CellUpdateParams): void {
     this.sendMessage({
-      type: 'UPDATE_CELL',
-      data: {
-        rowId: params.rowId,
-        columnId: params.columnId,
-        value: params.value
-      }
+      type: 'CellUpdate',
+      tenantId: this.config.tenantId,
+      documentId: this.config.documentId,
+      userId: this.config.userId,
+      rowId: params.rowId,
+      columnId: params.columnId,
+      value: params.value,
+      timestamp: Date.now()
     });
   }
 
@@ -86,7 +88,13 @@ export class GridSyncClient {
     this.connectionStatus = 'connecting';
     
     try {
-      this.socket = new WebSocket(this.config.serverUrl);
+      // Add the API key as a query parameter to the WebSocket URL
+      const url = new URL(this.config.serverUrl);
+      if (this.config.apiKey) {
+        url.searchParams.append('apiKey', this.config.apiKey);
+      }
+      
+      this.socket = new WebSocket(url.toString());
       
       this.socket.onopen = this.handleOpen;
       this.socket.onclose = this.handleClose;
@@ -104,15 +112,13 @@ export class GridSyncClient {
     this.connectionStatus = 'connected';
     this.reconnectAttempts = 0;
     
-    // Send authentication message
+    // Send join document message instead of authentication 
+    // (authentication is handled via API key in URL)
     this.sendMessage({
-      type: 'AUTHENTICATE',
-      data: {
-        apiKey: this.config.apiKey,
-        tenantId: this.config.tenantId,
-        documentId: this.config.documentId,
-        userId: this.config.userId
-      }
+      type: 'JoinDocument',
+      tenantId: this.config.tenantId,
+      documentId: this.config.documentId,
+      userId: this.config.userId
     });
 
     if (this.gridApi && this.config.onReady) {
@@ -152,20 +158,31 @@ export class GridSyncClient {
       const message = JSON.parse(event.data) as GridSyncMessage;
       
       switch (message.type) {
-        case 'STATE_UPDATE':
+        case 'INIT_STATE':
           if (this.config.onStateChange) {
-            this.config.onStateChange(message.data);
+            this.config.onStateChange(message.state);
           }
           break;
           
-        case 'ERROR':
+        case 'CELL_UPDATE_RESPONSE':
+          if (this.config.onStateChange) {
+            // Notify app about the updated cell
+            this.config.onStateChange({ cells: message.data });
+          }
+          break;
+          
+        case 'Error':
           if (this.config.onError) {
-            this.config.onError(message.data);
+            this.config.onError({
+              type: 'ServerError',
+              message: message.message || 'Unknown server error'
+            });
           }
           break;
           
         default:
           // Handle other message types
+          console.log('Unhandled message type:', message.type);
           break;
       }
     } catch (error) {

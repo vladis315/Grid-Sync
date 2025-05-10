@@ -10,9 +10,8 @@ dist/
 # Environment files
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.production
+grid-sync-backend/.env
 
 # Logs
 logs
@@ -38,3 +37,7 @@ yarn-error.log*
 .Trashes
 ehthumbs.db
 Thumbs.db 
+
+
+# IDE
+.cursorignore
