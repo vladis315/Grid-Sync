@@ -98,7 +98,7 @@ async function handleJoinDocument(ws, data) {
     if (!state || !state.rows || state.rows.length === 0) {
         try {
             // Fetch data from the persistence API
-            const apiUrl = process.env.PERSISTENCE_API_URL || 'http://localhost:5000/api';
+            const apiUrl = process.env.PERSISTENCE_API_URL || 'http://localhost:5001/api';
             const response = await fetch(`${apiUrl}/documents/${tenantId}/${documentId}`);
             if (response.ok) {
                 const data = await response.json();
@@ -221,7 +221,7 @@ async function handleCellUpdate(ws, data) {
     // Also save to database (new persistence layer)
     try {
         // Make a request to the persistence API
-        const apiUrl = process.env.PERSISTENCE_API_URL || 'http://localhost:5000/api';
+        const apiUrl = process.env.PERSISTENCE_API_URL || 'http://localhost:5001/api';
         const response = await fetch(`${apiUrl}/cells`, {
             method: 'POST',
             headers: {
