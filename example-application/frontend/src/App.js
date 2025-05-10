@@ -22,9 +22,10 @@ function App() {
   // Column definitions
   const [columnDefs] = useState([
     { field: 'id', headerName: 'ID', editable: false },
-    { field: 'col1', headerName: 'Column 1', editable: true },
-    { field: 'col2', headerName: 'Column 2', editable: true },
-    { field: 'col3', headerName: 'Column 3', editable: true }
+    { field: 'col1', headerName: 'Name', editable: true },
+    { field: 'col2', headerName: 'Age', editable: true },
+    { field: 'col3', headerName: 'Email', editable: true },
+    { field: 'col4', headerName: 'Active', editable: true }
   ]);
 
   // Default column definition
@@ -63,36 +64,53 @@ function App() {
           
           // Don't update state if the user is editing
           const gridApi = gridRef.current;
-          if (gridApi && gridApi.getEditingCells().length > 0) {
-            console.log('[DEBUG] Ignoring state update during editing');
-            return;
+          if (gridApi) {
+            try {
+              const editingCells = gridApi.getEditingCells();
+              if (editingCells && editingCells.length > 0) {
+                console.log('[DEBUG] Ignoring state update during editing');
+                return;
+              }
+            } catch (error) {
+              console.warn('[WARN] Error checking editing cells:', error);
+              // Continue with state update even if we couldn't check editing status
+            }
           }
           
           if (state && state.cells) {
             // Transform the state data into AG Grid format
             const newRowData = [];
             
-            if (state.rows && state.rows.length > 0) {
+            if (state.rows && Array.isArray(state.rows) && state.rows.length > 0) {
               state.rows.forEach(rowId => {
+                if (!rowId) return; // Skip if rowId is null or undefined
+                
                 const rowData = { id: rowId };
                 
                 if (state.cells[rowId]) {
                   Object.entries(state.cells[rowId]).forEach(([colId, cellData]) => {
                     if (cellData && cellData.value !== undefined) {
                       rowData[colId] = cellData.value;
+                    } else {
+                      rowData[colId] = ''; // Default to empty string for undefined values
                     }
                   });
                 }
                 
                 newRowData.push(rowData);
               });
-            } else {
-              // Fallback to placeholder data if no data in Redis
+            }
+            
+            if (newRowData.length === 0) {
+              // Fallback to placeholder data if no data was processed
               newRowData.push(
                 { id: 'row1', col1: '', col2: '', col3: '' },
                 { id: 'row2', col1: '', col2: '', col3: '' },
                 { id: 'row3', col1: '', col2: '', col3: '' }
               );
+              console.log('[DEBUG] Using placeholder data - no valid rows found in state');
+            } else {
+              console.log('[DEBUG] Processed', newRowData.length, 'rows from state');
             }
             
             setRowData(newRowData);
